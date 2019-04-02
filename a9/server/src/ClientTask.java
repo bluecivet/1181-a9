@@ -53,20 +53,19 @@ public class ClientTask implements Runnable
         try
         {
             // if the client should start fist tell them
-            if(startFirst)
-                writer.write("START");
-            else
-                writer.write("NOTSTART");
 
-            writer.flush();
 
             while(true)
             {
                 try
                 {
+                    String str = null;
+
                     readNum = reader.read(message);
-                    String str = new String(message,0,readNum);
-                    System.out.println(str);
+                    System.out.println("the readNum is " + readNum + " the char is " + new String(message));
+                    str = new String(message,0,readNum);
+                    System.out.println("the String is " +  str);
+
                     control(str,writer,otherWriter,otherReader);
                 }
                 catch(IOException e)
@@ -78,6 +77,16 @@ public class ClientTask implements Runnable
         catch (IOException e)
         {
             System.out.println("exiting");
+            try
+            {
+                otherWriter.write("WIN");
+                otherWriter.flush();
+            }
+            catch(IOException ex)
+            {
+                System.out.println("other socket close");
+            }
+
         }
         finally
         {
@@ -141,11 +150,35 @@ public class ClientTask implements Runnable
                 case "NOTMINE" : otherWriter.write("START");
                                  break;
 
-                case "CARD" : otherWriter.write(str);
+                case "CARD" : otherWriter.write(str); Thread.sleep(100);
                               break;
+
+                case "END" : otherWriter.write("START");
+                             break;
+
+                case "LOOSE" : otherWriter.write("WIN");
+                               break;
+
+                case "READY" : writer.write("CONNECT");  // tell the player are connect
+                              writer.flush();
+                              Thread.sleep(100);
+                              System.out.println("flushed");
+
+                                if(startFirst)
+                                    writer.write("START");
+                                 else
+                                     writer.write("NOTSTART");
+
+                                writer.flush();
+                                break;
 
                 default : System.out.println("cannot read this message: " + str); break;
             }
+        }
+        catch(InterruptedException e)
+        {
+            e.printStackTrace();
+
         }
         finally
         {

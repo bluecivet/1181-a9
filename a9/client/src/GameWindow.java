@@ -215,49 +215,61 @@ public class GameWindow extends JFrame
         {
 
             Card card = getCard(e);
-
-            if(!card.isSelected())  // if the card is not selected
+            if(user1.isThisTerm())
             {
-                if(user1.isThisTerm())  // if it is user1 term
-                    user1.setCount((byte)(user1.getCount() + 1));  // add a count to user1 which mean how many card user1  is selected
-                else if(user2.isThisTerm())  // if it is user2 term
-                    user2.setCount((byte)(user2.getCount() + 1));     // add a count to user2 which mean how many card user2  is selected
-
-                if(!card.isLoose())  // if this is not a loose card
+                if(!card.isSelected())  // if the card is not selected
                 {
-                    /*
-                      change the image to selected
-                      because the mouse will have to enter the area of the card
-                      so the card will become large
-                      but when will it change the image i want to original size when it change
-                      so i resize the image
-                     */
-                    card.setWidth(card.getWidth() - (desk.getWidth()>>5));
-                    card.setHeight(card.getHeight() - (desk.getHeight() >> 5));
-                    card.setBounds(card.getX(),card.getY(),card.getWidth(),card.getHeight());   // set size
-                    card.setImg(new ImageIcon("selected.png").getImage());    // change image
-                    card.repaint();
-                    card.setSelected(true);  // now this card is selected
-                }
-                else  // if the card is the loose card
-                {
-                    // change the image of the card to loose image
-                    card.setImg(new ImageIcon("loose.jpg").getImage());
-                    card.repaint();
-                    card.setSelected(true);
-                    endGame(user2,user1);    // reverse the order so that report the winner is correct
-                }
+                    if(user1.isThisTerm())  // if it is user1 term
+                        user1.setCount((byte)(user1.getCount() + 1));  // add a count to user1 which mean how many card user1  is selected
+//                else if(user2.isThisTerm())  // if it is user2 term
+//                    user2.setCount((byte)(user2.getCount() + 1));     // add a count to user2 which mean how many card user2  is selected
 
+                    writeServer("CARD " + findCard(card));
+
+                    if(!card.isLoose())  // if this is not a loose card
+                    {
+                        selectCard(card);//change image
+
+                    }
+                    else // if the card is the loose card
+                    {
+                        // change the image of the card to loose image
+                        try
+                        {
+                            Thread.sleep(100);
+                        }
+                        catch(Exception ex)
+                        {
+                            ex.printStackTrace();
+                        }
+                        writeServer("LOOSE");
+                        selectLoose(card);
+                        //endGame(user2,user1);    // reverse the order so that report the winner is correct
+                        endGame("LOOSE");
+                    }
+
+                }
+                else  // if the user click the card is selected
+                {
+                    // show the warning message
+                    mainMessage.setText("the card is selected");
+                }
             }
-            else  // if the user click the card is selected
+            else
             {
-                // show the warning message
-                mainMessage.setText("the card is selected");
+                mainMessage.setText("is not your term now");
             }
+
 
             termChange(); // determine the term chang or not base on the number of card selected
 
         }  // end method mouseClick
+
+
+        //iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+
+
+
 
 
        //iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
@@ -284,6 +296,7 @@ public class GameWindow extends JFrame
     }  // end class
 
 
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -303,7 +316,7 @@ public class GameWindow extends JFrame
             {
                 if(!user1.isThisTerm())  // if it is not left side term
                 {
-                    mainMessage.setText("now is right side term");
+                    mainMessage.setText("now is not your term");
                 }
                 else    // if it is left side term
                 {
@@ -313,34 +326,16 @@ public class GameWindow extends JFrame
                     }
                     else  // if left user already select card
                     {
-                        user1.setThisTerm(false);
-                        user2.setThisTerm(true);
+
                         clearCount(user1,user2);
-                        termChange();    // change term
+                        endTerm();
                     }
                 }
             } // end left button is click
 
             if(e.getSource().equals(doneRight))
             {
-                if(!user2.isThisTerm())
-                {
-                    mainMessage.setText("now is left side term");
-                }
-                else
-                {
-                    if(user2.getCount() < 1)  // if left user not select card
-                    {
-                        mainMessage.setText("you cannot skip your term");
-                    }
-                    else  // if left user already select card
-                    {
-                        user1.setThisTerm(true);
-                        user2.setThisTerm(false);
-                        clearCount(user1,user2);
-                        termChange();   // change term
-                    }
-                }
+               mainMessage.setText("this is not your buttom");
 
             }// end right button is click
         } // end mouse click method
@@ -362,27 +357,19 @@ public class GameWindow extends JFrame
         {
             if(user1.isThisTerm())  // if on usere term
             {
-                if(e.getSource().equals(quitRight)) // and the button is on user2 side
+                if(e.getSource().equals(quitLeft)) // and the button is on user2 side
                 {
-                    mainMessage.setText("this is not your turn cannot quit");
-                }
-                else
-                {
-                    endGame(user2, user1); // reverse the order so that report the winner is correct
+                    writeServer("LOOSE");
+                    endGame("LOOSE"); // reverse the order so that report the winner is correct
                 }
             }
 
-            if(user2.isThisTerm())  // if on user2 term
+            if(e.getSource().equals(quitRight))
             {
-                if(e.getSource().equals(quitLeft)) // and the button is on user1 side
-                {
-                    mainMessage.setText("this is not your turn cannot quit");
-                }
-                else
-                {
-                    endGame(user2, user1); // reverse the order so that report the winner is correct
-                }
+                mainMessage.setText("this is not your button");
             }
+
+
         } // end method
 
     }
@@ -404,15 +391,38 @@ public class GameWindow extends JFrame
             if(user1.isThisTerm())
                 {
                     leftMessage.setText("go");
-                    rightMessage.setText("stop");
+                    rightMessage.setText("  ");
                 }
 
-                if(user2.isThisTerm())
+                if(!user1.isThisTerm())
                 {
                     leftMessage.setText("stop");
-                    rightMessage.setText("go");
+                    rightMessage.setText("...");
                 }
         }
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public void startTerm()
+    {
+        user1.setThisTerm(true);
+        leftMessage.setText("go");
+        rightMessage.setText("  ");
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public void endTerm()
+    {
+        user1.setThisTerm(false);
+        leftMessage.setText("stop");
+        rightMessage.setText(("..."));
+        writeServer("END");
+    }
+
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -430,16 +440,15 @@ public class GameWindow extends JFrame
             if(user1.getCount() >= 2) // when the user select 2 or more card his term is pass
             {
                 clearCount(user1,user2);
-                user1.setThisTerm(false);
-                user2.setThisTerm(true);
+                endTerm();
             }
 
-            if(user2.getCount() >= 2) // when the user select 2 or more card his term is pass
-            {
-                clearCount(user1,user2);
-                user2.setThisTerm(false);
-                user1.setThisTerm(true);
-            }
+//            if(user2.getCount() >= 2) // when the user select 2 or more card his term is pass
+//            {
+//                clearCount(user1,user2);
+//                user2.setThisTerm(false);
+//                user1.setThisTerm(true);
+//            }
         }
 
 
@@ -488,7 +497,45 @@ public class GameWindow extends JFrame
 
 
 
+        private void endGame(String message)
+        {
+            if(message.equals("WIN"))
+            {
+                JOptionPane.showMessageDialog(this, "You are the Winner!");
+                System.exit(0);
+            }
+            else if(message.equals("LOOSE"))
+            {
+                JOptionPane.showMessageDialog(this, "YOU LOOSE!");
+                System.exit(0);
+            }
+            else
+            {
+                System.out.println("cannot read the message");
+            }
+        }
+
+
         ///////////////////////////////////////////////////////////////////////////////
+
+
+    public int findCard(Card card)
+    {
+        for(int i = 0; i < cards.length; i++)
+        {
+            if(cards[i].equals(card))
+            {
+                return i;
+            }
+        }
+
+        System.out.println("cannot find the card");
+        return -1;
+    }
+
+
+        ///////////////////////////////////////////////////////////////////////////////
+
 
 
     class ServerTask implements Runnable
@@ -506,11 +553,15 @@ public class GameWindow extends JFrame
                 input = server.getInputStream();
                 reader = new InputStreamReader(input);
 
+                writer.write("READY");
+                writer.flush();
 
+                String str = null;
                 while(true)
                 {
-                    readNum = reader.read(message);
-                    String str = new String(message,0,readNum);
+                        readNum = reader.read(message);
+                        str = new String(message,0,readNum);
+
                     System.out.println(str);
                     control(str,reader,writer);
                 }
@@ -573,12 +624,87 @@ public class GameWindow extends JFrame
                              break;
 
             case "START" :
-                            user1.setThisTerm(true);
-                            user2.setThisTerm(false);
+                            startTerm();
+                            break;
+
+            case "NOTSTART" :
+                            endTerm();
+                            break;
 
             case "CARD" :
-                            cards[Integer.parseInt(mgs[1])].setSelected(true);
+                            selectCard(cards[Integer.parseInt(mgs[1])]);
+                            try
+                            {
+                                Thread.sleep(100);
+                            }
+                            catch(InterruptedException e)
+                            {
+                                e.printStackTrace();
+                            }
+                            break;
+
+            case "WIN" :    endGame("WIN");
+                            break;
+
+            case "CONNECT" :
+                            System.out.println("connect");
+                            mainMessage.setText("connected");
+                            writeServer("RANDOM");
+                            break;
+
+            default :
+                            System.out.println("cannot read the message: " + str);
+                            break;
         }
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////
+
+
+    public void writeServer(String mgs)
+    {
+        try
+        {
+            writer.write(mgs);
+            writer.flush();
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////
+
+
+    public void selectCard(Card card)
+    {
+                /*
+                      change the image to selected
+                      because the mouse will have to enter the area of the card
+                      so the card will become large
+                      but when will it change the image i want to original size when it change
+                      so i resize the image
+                     */
+        card.setWidth(card.getWidth() - (desk.getWidth()>>5));
+        card.setHeight(card.getHeight() - (desk.getHeight() >> 5));
+        card.setBounds(card.getX(),card.getY(),card.getWidth(),card.getHeight());   // set size
+        card.setImg(new ImageIcon("selected.png").getImage());    // change image
+        card.repaint();
+        card.setSelected(true);  // now this card is selected
+    }
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public void selectLoose(Card card)
+    {
+        card.setImg(new ImageIcon("loose.jpg").getImage());
+        card.repaint();
+        card.setSelected(true);  // now this card is selected
     }
 
 
@@ -604,6 +730,7 @@ public class GameWindow extends JFrame
     GameWindow(Socket server)
     {
         this();
+        System.out.println("pass server");
         this.server = server;
         try
         {
@@ -637,7 +764,7 @@ public class GameWindow extends JFrame
         // create left right top message label
         mainMessage = new JLabel("",JLabel.CENTER);
         leftMessage = new JLabel("go",JLabel.CENTER);
-        rightMessage = new JLabel("stop",JLabel.CENTER);
+        rightMessage = new JLabel("  ",JLabel.CENTER);
 
         // create done and quit button for both side
         doneLeft = new JButton("done");

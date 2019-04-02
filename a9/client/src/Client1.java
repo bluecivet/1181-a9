@@ -8,7 +8,7 @@ public class Client1
         Socket server = null;
         try
         {
-            server = new Socket("localhost", 10080);
+            server = new Socket("localhost", 10081);
             GameWindow window = new GameWindow(server);
 
         }

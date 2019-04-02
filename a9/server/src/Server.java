@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Server
 {
-    final static int PORT = 10080;
+    final static int PORT = 10081;
 
     public static void main(String[] args)
     {
