@@ -1,3 +1,28 @@
+/**
+
+ * File:        User.java
+
+ * Author:      Zhilong Gan
+
+ * ID:          100331942
+
+ * Date:        2019.03.19
+
+ * class:       CPSC 1181-03
+
+ * instructor:  Hengameh Hamavand
+
+ * title        the user class
+
+ * Compiler:    java JDK 10.2
+
+ */
+
+
+/**
+ * the class the the user class
+ * represent the user in the game
+ */
 public class User
 {
     private boolean loose;
@@ -6,32 +31,46 @@ public class User
 
     //-------------------------------------------------------------------------
 
-
+    /**
+     * tell the user is loose or not
+     * @return true for loose
+     */
     public boolean isLoose()
     {
         return loose;
     }
 
-    public void setLoose(boolean loose)
-    {
-        this.loose = loose;
-    }
-
+    /**
+     * tell is the user term or not
+     * @return true for is this term false for not this term
+     */
     public boolean isThisTerm()
     {
         return thisTerm;
     }
 
+    /**
+     * set is the user playing or not
+     * @param thisTerm true for playing false for not playing
+     */
     public void setThisTerm(boolean thisTerm)
     {
         this.thisTerm = thisTerm;
     }
 
+    /**
+     * get how many time the user select the card
+     * @return the number of card user selected
+     */
     public byte getCount()
     {
         return count;
     }
 
+    /**
+     * set the number of card that usre select
+     * @param count the number of card select
+     */
     public void setCount(byte count)
     {
         this.count = count;

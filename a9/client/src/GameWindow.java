@@ -221,8 +221,6 @@ public class GameWindow extends JFrame
                 {
                     if(user1.isThisTerm())  // if it is user1 term
                         user1.setCount((byte)(user1.getCount() + 1));  // add a count to user1 which mean how many card user1  is selected
-//                else if(user2.isThisTerm())  // if it is user2 term
-//                    user2.setCount((byte)(user2.getCount() + 1));     // add a count to user2 which mean how many card user2  is selected
 
                     writeServer("CARD " + findCard(card));
 
@@ -234,17 +232,9 @@ public class GameWindow extends JFrame
                     else // if the card is the loose card
                     {
                         // change the image of the card to loose image
-                        try
-                        {
-                            Thread.sleep(100);
-                        }
-                        catch(Exception ex)
-                        {
-                            ex.printStackTrace();
-                        }
+
                         writeServer("LOOSE");
                         selectLoose(card);
-                        //endGame(user2,user1);    // reverse the order so that report the winner is correct
                         endGame("LOOSE");
                     }
 
@@ -404,7 +394,9 @@ public class GameWindow extends JFrame
 
         ////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+    /**
+     * when the term start let the user know
+     */
     public void startTerm()
     {
         user1.setThisTerm(true);
@@ -414,7 +406,9 @@ public class GameWindow extends JFrame
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+    /**
+     * when the term wnd let the user know
+     */
     public void endTerm()
     {
         user1.setThisTerm(false);
@@ -443,12 +437,6 @@ public class GameWindow extends JFrame
                 endTerm();
             }
 
-//            if(user2.getCount() >= 2) // when the user select 2 or more card his term is pass
-//            {
-//                clearCount(user1,user2);
-//                user2.setThisTerm(false);
-//                user1.setThisTerm(true);
-//            }
         }
 
 
@@ -495,10 +483,23 @@ public class GameWindow extends JFrame
             }
         }
 
-
+    /**
+     * when the game if the user is loose or win
+     * @param message the message get from server
+     */
 
         private void endGame(String message)
         {
+            System.out.println("close all");
+            try
+            {
+                server.close();
+            }
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+
             if(message.equals("WIN"))
             {
                 JOptionPane.showMessageDialog(this, "You are the Winner!");
@@ -518,7 +519,11 @@ public class GameWindow extends JFrame
 
         ///////////////////////////////////////////////////////////////////////////////
 
-
+    /**
+     * find the card from the card array
+     * @param card the card nned to find
+     * @return the index of the card
+     */
     public int findCard(Card card)
     {
         for(int i = 0; i < cards.length; i++)
@@ -537,38 +542,57 @@ public class GameWindow extends JFrame
         ///////////////////////////////////////////////////////////////////////////////
 
 
-
+    /**
+     * the task that when the game start it start
+     * listen to the server
+     * base on the message the game will have different effent
+     */
     class ServerTask implements Runnable
     {
+        /**
+         * override in the runnable class
+         */
+        @Override
         public void run()
         {
             mainMessage.setText("waiting for connect");
             InputStream input = null;
             InputStreamReader reader = null;
-            char[] message = new char[1024];
-            int readNum = 0;
+            char[] message = new char[1024]; // array to contain the message fom server
+            int readNum = 0; // number of character read
 
             try
             {
                 input = server.getInputStream();
                 reader = new InputStreamReader(input);
 
-                writer.write("READY");
+                writer.write("READY~");  // tell the server i am connect
                 writer.flush();
 
-                String str = null;
+                String str = null; // the message read from server
+
                 while(true)
                 {
-                        readNum = reader.read(message);
-                        str = new String(message,0,readNum);
+                    readNum = reader.read(message);
+                    str = new String(message,0,readNum);
+                    String[] mgs = str.split("~");// each command will with "~"
+                    // there may will muti commane
 
-                    System.out.println(str);
-                    control(str,reader,writer);
+                    for(int i = 0; i < mgs.length; i++)
+                    {
+                        System.out.println(mgs[i]);
+                        control(mgs[i],reader,writer);
+                    }
+
                 }
+            }
+            catch(SocketException e)
+            {
+                System.out.println("the socket is close");
             }
             catch(IOException e)
             {
-                e.printStackTrace();
+                System.out.println("read fail");
             }
             finally
             {
@@ -580,6 +604,7 @@ public class GameWindow extends JFrame
                 {
                     e.printStackTrace();
                 }
+
             }
 
         }
@@ -588,6 +613,14 @@ public class GameWindow extends JFrame
 
     ///////////////////////////////////////////////////////////////////////
 
+    /**
+     * the method will close all the input and output stream
+     * @param input the input stream
+     * @param output the output stream
+     * @param reader the reader
+     * @param writer the writer
+     * @throws IOException the stream exception
+     */
 
     public void closeAll(InputStream input, OutputStream output, InputStreamReader reader, OutputStreamWriter writer)
             throws IOException
@@ -609,43 +642,53 @@ public class GameWindow extends JFrame
 
     //////////////////////////////////////////////////////////////////////
 
+    /**
+     * the method is the guide that when the client get message from server what is the next step it need to do
+     * base on the message it get it will set different effect on the window
+     * @param str the message
+     * @param reader the reader to server
+     * @param writer the writer to server
+     */
 
     public void control(String str, InputStreamReader reader, OutputStreamWriter writer)
     {
         String[] mgs = str.split(" ");
         switch(mgs[0])
         {
+            // the position of the loose card
             case "RANDOM" :
                             cards[Integer.parseInt(mgs[1])].setLoose(true);
                             break;
 
+            // check it this is my term
             case "YOURTERM" :
                              String m = user1.isThisTerm() ? "MYTERM" : "NOTMINE";
                              break;
 
+            // start my term
             case "START" :
                             startTerm();
                             break;
 
+            // end my term
             case "NOTSTART" :
                             endTerm();
                             break;
 
+             // make that card to selected
             case "CARD" :
-                            selectCard(cards[Integer.parseInt(mgs[1])]);
-                            try
-                            {
-                                Thread.sleep(100);
-                            }
-                            catch(InterruptedException e)
-                            {
-                                e.printStackTrace();
-                            }
+                            Card card = cards[Integer.parseInt(mgs[1])];
+                            if(card.isLoose())
+                                selectLoose(card);
+                            else
+                            selectCard(card);
                             break;
 
+             // tell user i am winner and end the program
             case "WIN" :    endGame("WIN");
                             break;
 
+            // known that i am connect well
             case "CONNECT" :
                             System.out.println("connect");
                             mainMessage.setText("connected");
@@ -661,12 +704,15 @@ public class GameWindow extends JFrame
 
     ////////////////////////////////////////////////////////////////////////
 
-
+    /**
+     * the method will write the message to server
+     * @param mgs the message need to write
+     */
     public void writeServer(String mgs)
     {
         try
         {
-            writer.write(mgs);
+            writer.write(mgs + "~");
             writer.flush();
         }
         catch(IOException e)
@@ -678,7 +724,10 @@ public class GameWindow extends JFrame
 
     //////////////////////////////////////////////////////////////////////////
 
-
+    /**
+     * set the card image to selected
+     * @param card the card need to set
+     */
     public void selectCard(Card card)
     {
                 /*
@@ -699,7 +748,10 @@ public class GameWindow extends JFrame
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+    /**
+     * set the card image to loose card image
+     * @param card the card need to set
+     */
     public void selectLoose(Card card)
     {
         card.setImg(new ImageIcon("loose.jpg").getImage());
@@ -726,7 +778,12 @@ public class GameWindow extends JFrame
         setListener();
     }
 
-
+    /**
+     * the constructor for the game
+     * set the server to the game
+     * also set up the input and output stream
+     * @param server the server
+     */
     GameWindow(Socket server)
     {
         this();
@@ -763,7 +820,7 @@ public class GameWindow extends JFrame
 
         // create left right top message label
         mainMessage = new JLabel("",JLabel.CENTER);
-        leftMessage = new JLabel("go",JLabel.CENTER);
+        leftMessage = new JLabel("wait",JLabel.CENTER);
         rightMessage = new JLabel("  ",JLabel.CENTER);
 
         // create done and quit button for both side

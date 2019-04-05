@@ -1,6 +1,33 @@
+/**
+
+ * File:        Server.java
+
+ * Author:      Zhilong Gan
+
+ * ID:          100331942
+
+ * Date:        2019.04.03
+
+ * class:       CPSC 1181-03
+
+ * instructor:  Hengameh Hamavand
+
+ * title        main program for server
+
+ * Compiler:    java JDK 10.2
+
+ */
+
+
 import java.net.*;
 import java.io.*;
-import java.util.*;
+
+/**
+ * this class is the main program for the Server
+ * each time it accept 2 play then go to the next loop
+ * each loop it will generate a random for loose card
+ * also will determine which player will start first
+ */
 
 public class Server
 {
@@ -8,7 +35,6 @@ public class Server
 
     public static void main(String[] args)
     {
-        //ArrayList<Thread> tasks = new ArrayList<Thread>();
         try
         {
             ServerSocket server = new ServerSocket(PORT);
@@ -29,6 +55,7 @@ public class Server
 
                     int randomNum = (int) (Math.random() * 20);
 
+                    //the player who connect first will start the term first
                     Thread task = new Thread(new ClientTask(server,client1,client2,randomNum,true));
                     Thread task2 = new Thread(new ClientTask(server,client2,client1,randomNum,false));
                     task.start();
@@ -39,7 +66,7 @@ public class Server
                     e.printStackTrace();
                     //System.out.println("cannot read or write to the client");
                 }
-            }
+            }// end while
         }
         catch(IOException e)
         {
@@ -47,8 +74,5 @@ public class Server
         }
 
 
-
-
-
-    }
+    }// end main
 }
