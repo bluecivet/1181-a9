@@ -549,9 +549,17 @@ public class GameWindow extends JFrame
      */
     class ServerTask implements Runnable
     {
+
+        GameWindow window; // the game window
+        ServerTask(GameWindow window)
+        {
+            this.window = window;
+        }
+
         /**
          * override in the runnable class
          */
+
         @Override
         public void run()
         {
@@ -589,6 +597,8 @@ public class GameWindow extends JFrame
             catch(SocketException e)
             {
                 System.out.println("the socket is close");
+                JOptionPane.showMessageDialog(window,"the server is corrupted");
+                System.exit(-1);
             }
             catch(IOException e)
             {
@@ -799,7 +809,7 @@ public class GameWindow extends JFrame
             e.printStackTrace();
         }
 
-        serverListen = new Thread(new ServerTask());
+        serverListen = new Thread(new ServerTask(this));
         serverListen.start();
 
     }
